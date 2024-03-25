@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { supabase } from "/utils/api/supabaseClient";
+import { supabase } from "../../../utils/api/supabaseClient";
 import { useCart } from "../../store/cartContext"; // Adjust the import path as needed
 
 const CartComponent = () => {
