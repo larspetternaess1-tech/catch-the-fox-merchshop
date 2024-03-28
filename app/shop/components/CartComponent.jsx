@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { supabase } from "../../../utils/api/supabaseClient";
+import { supabase } from "/pages/api/supabaseClient"; // Adjust the import path as needed
 import { useCart } from "../../store/cartContext"; // Adjust the import path as needed
 
 const CartComponent = () => {
@@ -32,7 +32,7 @@ const CartComponent = () => {
                             size: data.size.name,
                             price: data.product.price,
                             quantity,
-                            image_url: data.product.image_url,
+                            image: data.product.image,
                         };
                     } catch (error) {
                         console.error(
@@ -54,6 +54,42 @@ const CartComponent = () => {
     if (cartItems.length === 0) {
         return <div>Your cart is empty</div>;
     }
+    const handleCheckout = async () => {
+        try {
+            const lineItems = cartItems.map((item) => ({
+                price_data: {
+                    currency: "nok",
+                    product_data: {
+                        name: item.name,
+                        images: [item.image],
+                    },
+                    unit_amount: item.price * 100,
+                },
+                quantity: item.quantity,
+            }));
+
+            const response = await fetch("/api/create-checkout-session", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ items: lineItems }),
+            });
+
+            const data = await response.json();
+
+            if (response.status === 200) {
+                window.location = `https://checkout.stripe.com/pay/${data.sessionId}`;
+            } else {
+                console.error(
+                    "Failed to initiate Stripe Checkout:",
+                    data.message
+                );
+            }
+        } catch (error) {
+            console.error("Error during checkout:", error);
+        }
+    };
 
     return (
         <div>
@@ -64,12 +100,18 @@ const CartComponent = () => {
                     <div>Price: {(item.price / 100).toFixed(2)}</div>
                     <div>Quantity: {item.quantity}</div>
                     <img
-                        src={item.image_url}
+                        src={item.image}
                         alt={item.name}
                         style={{ width: "100px" }}
                     />
                 </div>
             ))}
+            <button
+                className="px-6 py-2 bg-clrprimary text-clrwhite"
+                onClick={handleCheckout}
+            >
+                Checkout
+            </button>
         </div>
     );
 };

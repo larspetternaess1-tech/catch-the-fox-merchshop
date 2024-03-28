@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { supabase } from "/utils/api/supabaseClient";
+import { supabase } from "/pages/api/supabaseClient";
 import Link from "next/link";
 import Image from "next/image";
 import MoreProducts from "./components/MoreProducts";
