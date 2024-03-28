@@ -98,7 +98,7 @@ const CartComponent = () => {
                     <div>Name: {item.name}</div>
                     <div>Size: {item.size}</div>
                     <div>Price: {(item.price / 100).toFixed(2)}</div>
-                    <div>Quantity: {item.quantity}</div>
+                    <div>Amount: {item.quantity}</div>
                     <img
                         src={item.image}
                         alt={item.name}
