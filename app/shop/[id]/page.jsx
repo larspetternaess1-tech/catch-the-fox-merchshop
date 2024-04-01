@@ -56,6 +56,7 @@ const Page = () => {
         // Map SizesStock entries to include both SizesStock.id and size details
         const sizesWithStock = sizesStockData.map((ss) => ({
             sizesStockId: ss.id,
+            amount: ss.amount,
             name: ss.size.name,
             sizeId: ss.size.id,
         }));
@@ -70,7 +71,10 @@ const Page = () => {
     if (!product) {
         return <div>Loading...</div>;
     }
-
+    const handleAddToCartClick = async (sizeId) => {
+        await addToCart(sizeId);
+        // Optional: Additional UI feedback/logic after adding to cart
+    };
     return (
         <>
             <section className="mx-auto flex max-w-7xl flex-col gap-20 px-4 py-14">
@@ -120,7 +124,6 @@ const Page = () => {
                                 onClick={toggleDropdown}
                             >
                                 Choose size
-                                {/* Include chevron down icon */}
                             </button>
                             <ul
                                 className={`${
@@ -132,16 +135,30 @@ const Page = () => {
                                     <li key={index}>
                                         <button
                                             onClick={() => {
-                                                setSelectedSizeId(
-                                                    size.sizesStockId
-                                                ); // Use SizesStock.id
-                                                console.log(
-                                                    `Size selected: ${size.sizesStockId}`
-                                                );
+                                                if (size.amount > 0) {
+                                                    setSelectedSizeId(
+                                                        size.sizesStockId
+                                                    ); // Use SizesStock.id
+                                                    console.log(
+                                                        `Size selected: ${size.sizesStockId}`
+                                                    );
+                                                }
                                             }}
-                                            className="bg-opacity-80 w-44 py-4 bg-clrprimary font-bold"
+                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary gap-2 flex justify-center items-center hover:bg-opacity-70 focus:outline focus:outline-2 focus:outline-clrwhite 
+                        ${
+                            size.amount === 0
+                                ? "opacity-50 cursor-not-allowed"
+                                : "hover:bg-opacity-70"
+                        }`}
+                                            // Disable button if amount is 0
+                                            disabled={size.amount === 0}
                                         >
-                                            {size.name}
+                                            <span className="font-bold">
+                                                {size.name}
+                                            </span>
+                                            <span className="text-xs">
+                                                ( {size.amount} left )
+                                            </span>
                                         </button>
                                     </li>
                                 ))}
@@ -158,11 +175,10 @@ const Page = () => {
                                 if (!selectedSizeId) {
                                     alert("Please select a size.");
                                 } else {
-                                    // Use the addToCart function from the cart context
-                                    addToCart(product, selectedSizeId);
+                                    handleAddToCartClick(selectedSizeId);
                                 }
                             }}
-                            className="mt-auto w-fit bg-clrprimary px-12 py-4      font-extrabold text-xl rounded-full hover:bg-clrwhite hover:text-clrdark"
+                            className="mt-auto w-fit bg-clrprimary px-12 py-4 font-extrabold text-xl rounded-full hover:bg-clrwhite hover:text-clrdark"
                         >
                             Add to cart
                         </button>

@@ -1,5 +1,4 @@
-import CartComponent from "../components/CartComponent"; // Adjust path as needed
-
+import CartComponent from "../components/CartComponent";
 const Page = () => {
     return (
         <main>

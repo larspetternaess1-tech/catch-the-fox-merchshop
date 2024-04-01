@@ -1,43 +1,109 @@
 "use client";
+import { supabase } from "../../pages/api/supabaseClient";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-// Create a cart context
 const CartContext = createContext();
 
-// Export useContext Hook for easy access to the cart context
 export const useCart = () => useContext(CartContext);
 
-// Component that provides cart context
 export const CartProvider = ({ children }) => {
     const [cart, setCart] = useState({});
+    const [isHydrated, setIsHydrated] = useState(false);
 
-    // Load cart from localStorage on initial render
     useEffect(() => {
         const cartFromStorage = localStorage.getItem("cart");
         if (cartFromStorage) {
             setCart(JSON.parse(cartFromStorage));
         }
+        setIsHydrated(true);
     }, []);
 
-    // Update localStorage when cart changes
     useEffect(() => {
-        localStorage.setItem("cart", JSON.stringify(cart));
-    }, [cart]);
+        if (isHydrated) {
+            localStorage.setItem("cart", JSON.stringify(cart));
+        }
+    }, [cart, isHydrated]);
 
-    const addToCart = (product, sizeId) => {
-        const newItem = { ...product, sizeId };
-        const itemKey = newItem.sizeId;
-        const updatedCart = {
-            ...cart,
-            [itemKey]: (cart[itemKey] || 0) + 1,
-        };
-        setCart(updatedCart);
-        console.log(updatedCart);
+    const addToCart = async (sizeStockId) => {
+        console.log("Adding to cart:", sizeStockId);
+        try {
+            // Fetch stock information for the given sizeStockId
+            const { data, error } = await supabase
+                .from("sizesStock")
+                .select("id, amount, product_id, size_id")
+                .eq("id", sizeStockId)
+                .single();
+
+            if (error) throw error;
+
+            // Proceed if stock information is found
+            if (data) {
+                setCart((prevCart) => {
+                    const currentQuantityInCart = prevCart[sizeStockId] || 0;
+
+                    // Check if adding another unit exceeds the available stock
+                    if (currentQuantityInCart < data.amount) {
+                        // If under stock limit, update the cart
+                        const updatedCart = {
+                            ...prevCart,
+                            [sizeStockId]: currentQuantityInCart + 1,
+                        };
+                        return updatedCart;
+                    } else {
+                        // If stock limit is reached or exceeded
+                        alert(
+                            " No more of this product in stock | Ikke mer av dette produktet på lager."
+                        );
+                        return prevCart; // Return the existing cart without changes
+                    }
+                });
+            } else {
+                alert("Out of stock | Utsolgt");
+            }
+        } catch (error) {
+            console.error("Error fetching stock information:", error);
+            alert(
+                "An error occurred while attempting to add the product to the cart."
+            );
+        }
     };
 
+    const decreaseQuantity = (sizeId) => {
+        setCart((prevCart) => {
+            const itemKey = sizeId.toString();
+            if (prevCart[itemKey] > 1) {
+                const newQuantity = prevCart[itemKey] - 1;
+                return { ...prevCart, [itemKey]: newQuantity };
+            } else {
+                return prevCart; // Do not decrease below 1 to avoid negative values
+            }
+        });
+    };
+
+    const removeFromCart = (sizeId) => {
+        setCart((prevCart) => {
+            const updatedCart = { ...prevCart };
+            delete updatedCart[sizeId.toString()];
+            return updatedCart;
+        });
+    };
+
+    if (!isHydrated) {
+        return null;
+    }
+
     return (
-        <CartContext.Provider value={{ cart, addToCart }}>
+        <CartContext.Provider
+            value={{
+                cart,
+                addToCart,
+                decreaseQuantity,
+                removeFromCart,
+            }}
+        >
             {children}
         </CartContext.Provider>
     );
 };
+
+export default CartProvider;
