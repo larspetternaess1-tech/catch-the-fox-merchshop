@@ -38,20 +38,24 @@ export default async function handler(req, res) {
 // Webhooks
 // Add this to your existing checkout_sessions.js or create a new file for webhooks
 
-export default async function webhookHandler(req, res) {
-    if (req.method === 'POST') {
-        const sig = req.headers['stripe-signature'];
+export async function webhookHandler(req, res) {
+    if (req.method === "POST") {
+        const sig = req.headers["stripe-signature"];
         let event;
 
         try {
-            event = stripe.webhooks.constructEvent(req.rawBody, sig, process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET);
+            event = stripe.webhooks.constructEvent(
+                req.rawBody,
+                sig,
+                process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET
+            );
         } catch (err) {
             res.status(400).send(`Webhook Error: ${err.message}`);
             return;
         }
 
         // Handle the checkout.session.completed event
-        if (event.type === 'checkout.session.completed') {
+        if (event.type === "checkout.session.completed") {
             const session = event.data.object;
 
             // Here you would communicate with your Supabase to adjust stock
@@ -64,7 +68,7 @@ export default async function webhookHandler(req, res) {
             return res.status(400).end();
         }
     } else {
-        res.setHeader('Allow', 'POST');
-        res.status(405).end('Method Not Allowed');
+        res.setHeader("Allow", "POST");
+        res.status(405).end("Method Not Allowed");
     }
 }
