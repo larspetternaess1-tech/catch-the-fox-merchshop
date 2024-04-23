@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
         const buf = await buffer(req);
         const sig = req.headers["stripe-signature"];
-        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+        const webhookSecret = process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET;
 
         let event;
 
