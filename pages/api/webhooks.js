@@ -2,7 +2,7 @@
 
 import { buffer } from "micro";
 import { supabase } from "./supabaseClient"; // Adjust the import path as needed
-import { stripe } from "./stripeClient"; // Adjust this if you have a separate file for your Stripe client
+import { stripe } from "./checkout_sessions"; // Adjust this if you have a separate file for your Stripe client
 
 export const config = {
     api: {
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
             const lineItems = await stripe.checkout.sessions.listLineItems(
                 session.id,
                 {
-                    limit: 100, // Adjust based on expected number of items
+                    limit: 1000, // Adjust based on expected number of items
                 }
             );
 
