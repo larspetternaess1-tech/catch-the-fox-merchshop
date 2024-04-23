@@ -1,39 +1,37 @@
-import { stripe } from "./checkout_sessions"; // Assuming stripe is exported from here
-
 export default async function handler(req, res) {
     if (req.method === "POST") {
-        let data = "";
-        req.on("data", (chunk) => {
-            data += chunk;
-        });
-        req.on("end", () => {
-            try {
-                const sig = req.headers["stripe-signature"];
-                const event = stripe.webhooks.constructEvent(
-                    data,
-                    sig,
-                    process.env.NEXT_PUBLIC_STRIPE_WEBHOOK_SECRET
+        const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+        const payload = req.body;
+        const sig = req.headers["stripe-signature"];
+
+        let event;
+
+        try {
+            event = stripe.webhooks.constructEvent(
+                payload,
+                sig,
+                process.env.STRIPE_WEBHOOK_SECRET
+            );
+        } catch (err) {
+            console.log(`Webhook Error: ${err.message}`);
+            return res.status(400).send(`Webhook Error: ${err.message}`);
+        }
+
+        // Handle the event
+        switch (event.type) {
+            case "checkout.session.completed":
+                const session = event.data.object;
+                // Handle checkout session completion
+                console.log(
+                    `Payment for session ${session.id} was successful!`
                 );
+                break;
+            default:
+                console.log(`Unhandled event type ${event.type}`);
+        }
 
-                // Handle the checkout.session.completed event
-                if (event.type === "checkout.session.completed") {
-                    const session = event.data.object;
-                    console.log(
-                        `Payment was successful for session: ${session.id}`
-                    );
-                    // Here you can implement the logic to adjust stock in Supabase or perform other actions
-
-                    res.status(200).json({ received: true });
-                } else {
-                    res.status(400).json({ error: "Unhandled event type" });
-                }
-            } catch (err) {
-                console.error(`Webhook Error: ${err.message}`);
-                res.status(400).json({
-                    error: `Webhook Error: ${err.message}`,
-                });
-            }
-        });
+        // Return a response to acknowledge receipt of the event
+        res.json({ received: true });
     } else {
         res.setHeader("Allow", "POST");
         res.status(405).end("Method Not Allowed");
