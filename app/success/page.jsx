@@ -21,9 +21,13 @@ export default function SuccessPage() {
                     <span className="text-xs">- LP</span>
                 </p>
             </div>
-            <section className="mx-auto grid w-full max-w-7xl gap-4 p-4 place-items-center">
-                <h1>Takk for din ordre!</h1>
-                <p>Kvittering sendt til din e-post. </p>
+            <section className="mx-auto grid w-full max-w-fit gap-4 p-4 ">
+                <h1 className="text-2xl italic">Takk for at du støtter oss!</h1>
+                <p className="italic font-light">
+                    Du skal ha fått en kvittering i eposten din.
+                </p>
+                <p>Med vennlig hilsen,</p>
+                <p>Tommy Jee, Lars Petter Næss, </p>
             </section>
         </main>
     );

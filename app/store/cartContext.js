@@ -87,6 +87,22 @@ export const CartProvider = ({ children }) => {
             return updatedCart;
         });
     };
+    const updateCartQuantity = (sizeStockId, newQuantity) => {
+        setCart((prevCart) => {
+            // If newQuantity is 0, consider removing the item from the cart
+            if (newQuantity <= 0) {
+                const updatedCart = { ...prevCart };
+                delete updatedCart[sizeStockId];
+                return updatedCart;
+            } else {
+                // Update the quantity for the specified item
+                return {
+                    ...prevCart,
+                    [sizeStockId]: newQuantity,
+                };
+            }
+        });
+    };
 
     if (!isHydrated) {
         return null;
@@ -99,6 +115,7 @@ export const CartProvider = ({ children }) => {
                 addToCart,
                 decreaseQuantity,
                 removeFromCart,
+                updateCartQuantity,
             }}
         >
             {children}

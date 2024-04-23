@@ -5,13 +5,21 @@ import { supabase } from "/pages/api/supabaseClient"; // Adjust the import path 
 import { useCart } from "../../store/cartContext"; // Adjust the import path as needed
 import { loadStripe } from "@stripe/stripe-js";
 import Link from "next/link";
+import ErrorMessage from "../../components/ErrorMessage";
 
 const stripePromise = loadStripe(
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
 
 const CartComponent = () => {
-    const { cart, addToCart, decreaseQuantity, removeFromCart } = useCart();
+    const {
+        cart,
+        addToCart,
+        decreaseQuantity,
+        removeFromCart,
+        updateCartQuantity,
+    } = useCart();
+    const [errorMessage, setErrorMessage] = useState("");
     const [cartItems, setCartItems] = useState([]);
     const handleAddToCartClick = async (sizeId) => {
         await addToCart(sizeId);
@@ -106,11 +114,48 @@ const CartComponent = () => {
         return price.toFixed(2) / 100 + 79;
     };
     const handleCheckout = async () => {
+        let adjustmentsNeeded = false;
+
+        const validatedCartItems = await Promise.all(
+            cartItems.map(async (item) => {
+                const { data, error } = await supabase
+                    .from("sizesStock")
+                    .select("amount")
+                    .eq("id", item.stockId)
+                    .single();
+
+                if (error) {
+                    console.error("Error validating stock:", error);
+                    return null; // Continue with other items, this item will be excluded
+                }
+
+                if (item.quantity > data.amount) {
+                    // Adjust this item's quantity in the cart to the available stock
+                    updateCartQuantity(item.stockId, data.amount); // Assumed function
+                    adjustmentsNeeded = true;
+
+                    return { ...item, quantity: data.amount }; // Update quantity for checkout
+                }
+
+                return item; // No adjustment needed
+            })
+        );
+
+        if (adjustmentsNeeded) {
+            setErrorMessage(
+                "Some items in your cart are no longer available in the selected quantity. Please review your cart before proceeding. | Noen varer i handlekurven er ikke lenger tilgjengelige i valgt antall. Vennligst gjennomgå handlekurven din før du fortsetter."
+            );
+            return; // Halt the checkout process
+        }
+
+        // If no adjustments are needed, or once adjustments are acknowledged, proceed with checkout
         const stripe = await stripePromise;
-        const items = cartItems.map((item) => ({
-            price: item.stripe_id, // Assuming item.stripe_id is the Stripe price ID
-            quantity: item.quantity,
-        }));
+        const items = validatedCartItems
+            .filter((item) => item !== null)
+            .map((item) => ({
+                price: item.stripe_id,
+                quantity: item.quantity,
+            }));
 
         fetch("/api/checkout_sessions", {
             method: "POST",
@@ -175,6 +220,7 @@ const CartComponent = () => {
                                         viewBox="0 0 100 100"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
+                                        className="hover:bg-clrprimary target:bg-clrprimary rounded-full"
                                     >
                                         <g clipPath="url(#clip0_540_69)">
                                             <path
@@ -184,7 +230,9 @@ const CartComponent = () => {
                                         </g>
                                     </svg>
                                 </button>
-                                <span>{item.quantity}</span>
+                                <span className="cursor-default">
+                                    {item.quantity}
+                                </span>
                                 <button
                                     onClick={() =>
                                         handleAddToCartClick(item.stockId)
@@ -196,6 +244,7 @@ const CartComponent = () => {
                                         viewBox="0 0 100 100"
                                         fill="none"
                                         xmlns="http://www.w3.org/2000/svg"
+                                        className="hover:bg-clrprimary target:bg-clrprimary rounded-full"
                                     >
                                         <g clipPath="url(#clip0_540_67)">
                                             <path
@@ -209,7 +258,7 @@ const CartComponent = () => {
                         </div>
                         <button
                             onClick={() => removeFromCart(item.stockId)}
-                            className=" text-xs font-black text-clrprimary"
+                            className=" text-xs font-black text-clrprimary italic hover:text-clrwhite"
                         >
                             Remove
                         </button>
@@ -217,6 +266,7 @@ const CartComponent = () => {
                 </div>
             ))}
             <div className="flex flex-col items-end gap-2">
+                {errorMessage && <ErrorMessage message={errorMessage} />}
                 <span className="flex flex-col gap-0">
                     79kr - Shipping for all of Norway
                 </span>
