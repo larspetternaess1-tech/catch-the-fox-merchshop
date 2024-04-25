@@ -126,35 +126,35 @@ const CartComponent = () => {
 
                 if (error) {
                     console.error("Error validating stock:", error);
-                    return null;
+                    return null; // Continue with other items, this item will be excluded
                 }
 
                 if (item.quantity > data.amount) {
-                    updateCartQuantity(item.stockId, data.amount);
+                    // Adjust this item's quantity in the cart to the available stock
+                    updateCartQuantity(item.stockId, data.amount); // Assumed function
                     adjustmentsNeeded = true;
-                    return { ...item, quantity: data.amount };
+
+                    return { ...item, quantity: data.amount }; // Update quantity for checkout
                 }
 
-                return item;
+                return item; // No adjustment needed
             })
         );
 
         if (adjustmentsNeeded) {
             setErrorMessage(
-                "Some items in your cart are no longer available in the selected quantity. Please review your cart before proceeding."
+                "Some items in your cart are no longer available in the selected quantity. Please review your cart before proceeding. | Noen varer i handlekurven er ikke lenger tilgjengelige i valgt antall. Vennligst gjennomgå handlekurven din før du fortsetter."
             );
-            return;
+            return; // Halt the checkout process
         }
 
+        // If no adjustments are needed, or once adjustments are acknowledged, proceed with checkout
         const stripe = await stripePromise;
         const items = validatedCartItems
             .filter((item) => item !== null)
             .map((item) => ({
                 price: item.stripe_id,
                 quantity: item.quantity,
-                metadata: {
-                    sizeStockId: item.stockId.toString(), // Adding sizeStockId as metadata
-                },
             }));
 
         fetch("/api/checkout_sessions", {
@@ -164,16 +164,20 @@ const CartComponent = () => {
             },
             body: JSON.stringify({ items }),
         })
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok)
+                    throw new Error("Network response was not ok");
+                return response.json();
+            })
             .then((data) => {
-                stripe.redirectToCheckout({ sessionId: data.sessionId });
+                // Redirect to Stripe Checkout
+                return stripe.redirectToCheckout({ sessionId: data.sessionId });
             })
             .catch((error) => {
-                console.error("Checkout error:", error);
-                setErrorMessage("Checkout failed. Please try again.");
+                console.error("Error:", error);
+                // Here you could display an error message to the user, if needed
             });
     };
-
     return (
         <div className="flex w-full flex-col gap-2">
             {cartItems.map((item, index) => (
