@@ -1,7 +1,6 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Stripe and Supabase clients using environment variables
 const stripe = new Stripe(process.env.NEXT_PUBLIC_STRIPE_SECRET);
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -9,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const config = {
     api: {
-        bodyParser: false, // Disabling body parsing to manually handle raw bodies for Stripe signature verification
+        bodyParser: false, // Disabling body parsing
     },
 };
 
@@ -21,7 +20,6 @@ export default async function handler(req, res) {
         let event;
 
         try {
-            // Construct the event using the Stripe library
             event = stripe.webhooks.constructEvent(
                 buf,
                 sig,
@@ -41,10 +39,11 @@ export default async function handler(req, res) {
                 expand: ["line_items.data"],
             });
 
-            // Iterate over each item and update inventory in Supabase
             const items = session.line_items.data;
+
+            // Update inventory in Supabase for each item purchased
             for (const item of items) {
-                const sizeStockId = item.metadata.sizeStockId; // Assuming sizeStockId is correctly stored in metadata
+                const sizeStockId = item.description; // Assuming sizeStockId is stored in the description
                 const quantity = item.quantity;
 
                 await updateInventory(sizeStockId, quantity);
@@ -58,7 +57,6 @@ export default async function handler(req, res) {
     }
 }
 
-// Function to read the raw body from the request for Stripe verification
 async function readRawBody(request) {
     return new Promise((resolve, reject) => {
         let totalBuffer = Buffer.from([]);
@@ -74,11 +72,10 @@ async function readRawBody(request) {
     });
 }
 
-// Function to update inventory in Supabase
 async function updateInventory(sizeStockId, quantity) {
     try {
         // Retrieve the current stock level from the database
-        const { data: stockData, error: stockError } = await supabase
+        let { data: stockData, error: stockError } = await supabase
             .from("sizesStock")
             .select("amount")
             .eq("id", sizeStockId)
@@ -90,6 +87,8 @@ async function updateInventory(sizeStockId, quantity) {
 
         if (stockData) {
             const newAmount = stockData.amount - quantity;
+
+            // Check for negative inventory
             if (newAmount < 0) {
                 console.error(
                     "Attempted to reduce inventory below zero for item ID:",
