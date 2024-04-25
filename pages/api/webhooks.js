@@ -1,36 +1,53 @@
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+export const config = {
+    api: {
+        bodyParser: false, // Disabling body parsing
+    },
+};
+
 export default async function handler(req, res) {
     if (req.method === "POST") {
+        const buf = await readRawBody(req);
+        const sig = req.headers["stripe-signature"];
+
         let event;
 
-        // Your Stripe webhook secret
-        const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
         try {
-            const signature = req.headers["stripe-signature"];
-
-            // Ensure the request is signed by Stripe
             event = stripe.webhooks.constructEvent(
-                req.body,
-                signature,
-                stripeWebhookSecret
+                buf,
+                sig,
+                process.env.STRIPE_WEBHOOK_SECRET
             );
         } catch (err) {
-            console.log(`Webhook Error: ${err.message}`);
+            console.error(`Error verifying webhook signature: ${err.message}`);
             return res.status(400).send(`Webhook Error: ${err.message}`);
         }
 
-        // Handle the checkout.session.completed event
         if (event.type === "checkout.session.completed") {
-            const session = event.data.object;
-
-            // Handle the session completion
-            console.log("Checkout session completed!", session);
+            console.log("Payment was successful!");
+            // Perform actions based on the successful payment
         }
 
-        // Return a response to acknowledge receipt of the event
         res.json({ received: true });
     } else {
         res.setHeader("Allow", ["POST"]);
         res.status(405).end("Method Not Allowed");
     }
+}
+
+async function readRawBody(request) {
+    return new Promise((resolve, reject) => {
+        let totalBuffer = Buffer.from([]);
+        request.on("data", (chunk) => {
+            totalBuffer = Buffer.concat([totalBuffer, chunk]);
+        });
+        request.on("end", () => {
+            resolve(totalBuffer);
+        });
+        request.on("error", (err) => {
+            reject(err);
+        });
+    });
 }
