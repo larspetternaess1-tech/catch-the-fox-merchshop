@@ -73,19 +73,50 @@ async function readRawBody(request) {
 }
 
 async function updateInventory(sizeStockId, quantity) {
-    const { data, error } = await supabase
-        .from("sizesStock")
-        .update({ amount: supabase.functions.raw("amount - ?", [quantity]) })
-        .eq("id", sizeStockId);
+    try {
+        // Retrieve the current stock level from the database
+        let { data: stockData, error: stockError } = await supabase
+            .from("sizesStock")
+            .select("amount")
+            .eq("id", sizeStockId)
+            .single();
 
-    if (error) {
+        if (stockError) {
+            throw stockError;
+        }
+
+        if (stockData) {
+            const newAmount = stockData.amount - quantity;
+
+            // Check for negative inventory
+            if (newAmount < 0) {
+                console.error(
+                    "Attempted to reduce inventory below zero for item ID:",
+                    sizeStockId
+                );
+                return;
+            }
+
+            // Update the stock level in the database
+            const { data, error } = await supabase
+                .from("sizesStock")
+                .update({ amount: newAmount })
+                .eq("id", sizeStockId);
+
+            if (error) {
+                throw error;
+            }
+
+            console.log(
+                "Inventory updated for item ID:",
+                sizeStockId,
+                "; New data:",
+                data
+            );
+        } else {
+            console.error("No stock data found for item ID:", sizeStockId);
+        }
+    } catch (error) {
         console.error("Error updating inventory:", error);
-    } else {
-        console.log(
-            "Inventory updated for item ID:",
-            sizeStockId,
-            "; New data:",
-            data
-        );
     }
 }
