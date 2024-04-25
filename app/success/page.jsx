@@ -5,8 +5,9 @@ export default function SuccessPage() {
     useEffect(() => {
         // Clear the cart from localStorage
         localStorage.removeItem("cart");
+        console.log("Cart cleared");
+        localStorage.removeItem("cart");
     }, []);
-
     return (
         <main className="min-h-screen ">
             <div className="flex w-full flex-col items-center gap-8 py-16">
