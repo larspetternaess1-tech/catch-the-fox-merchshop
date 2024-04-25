@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const config = {
     api: {
-        bodyParser: false,
+        bodyParser: false, // Disabling body parsing
     },
 };
 
@@ -31,45 +31,22 @@ export default async function handler(req, res) {
         }
 
         if (event.type === "checkout.session.completed") {
-            console.log("Payment was successful! it really was!");
+            console.log("Payment was successful!");
 
-            // Retrieve the session to get line items
+            // Retrieve the session to get the purchased items
             const sessionId = event.data.object.id;
             const session = await stripe.checkout.sessions.retrieve(sessionId, {
                 expand: ["line_items.data"],
             });
 
-            // Accumulate quantities for each item
-            const itemCounts = session.line_items.data.reduce((acc, item) => {
-                acc[item.description] =
-                    (acc[item.description] || 0) + item.quantity;
-                return acc;
-            }, {});
+            const items = session.line_items.data;
 
-            // Update inventory in Supabase for each unique item
-            for (const [sizeStockId, quantity] of Object.entries(itemCounts)) {
-                const { data, error } = await supabase
-                    .from("sizesStock")
-                    .update({
-                        amount: supabase.functions.raw("amount - ?", [
-                            quantity,
-                        ]),
-                    })
-                    .eq("id", sizeStockId);
+            // Update inventory in Supabase for each item purchased
+            for (const item of items) {
+                const sizeStockId = item.description; // Assuming sizeStockId is stored in the description
+                const quantity = item.quantity;
 
-                if (error) {
-                    console.error(
-                        "Error updating inventory for item:",
-                        sizeStockId,
-                        error.message
-                    );
-                } else {
-                    console.log(
-                        "Inventory updated for item:",
-                        sizeStockId,
-                        data
-                    );
-                }
+                await updateInventory(sizeStockId, quantity);
             }
         }
 
@@ -93,4 +70,22 @@ async function readRawBody(request) {
             reject(err);
         });
     });
+}
+
+async function updateInventory(sizeStockId, quantity) {
+    const { data, error } = await supabase
+        .from("sizesStock")
+        .update({ amount: supabase.functions.raw("amount - ?", [quantity]) })
+        .eq("id", sizeStockId);
+
+    if (error) {
+        console.error("Error updating inventory:", error);
+    } else {
+        console.log(
+            "Inventory updated for item ID:",
+            sizeStockId,
+            "; New data:",
+            data
+        );
+    }
 }
