@@ -1,3 +1,4 @@
+import Contact from "../../components/contact";
 import CartComponent from "../components/CartComponent";
 const Page = () => {
     return (
@@ -13,6 +14,7 @@ const Page = () => {
                     <CartComponent />
                 </div>
             </div>
+            <Contact />
         </main>
     );
 };

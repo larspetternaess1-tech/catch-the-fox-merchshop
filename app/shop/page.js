@@ -1,5 +1,6 @@
 import React from "react";
 import ShopGrid from "./components/ShopGrid";
+import Contact from "../components/contact";
 
 function page() {
     return (

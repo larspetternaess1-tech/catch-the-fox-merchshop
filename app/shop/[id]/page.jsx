@@ -3,10 +3,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "/pages/api/supabaseClient";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import MoreProducts from "./components/MoreProducts";
 import { useCart } from "../../store/cartContext";
+import Contact from "../../components/contact";
 
 const Page = () => {
     const { id } = useParams();
@@ -15,6 +17,7 @@ const Page = () => {
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [selectedSizeId, setSelectedSizeId] = useState(null);
     const { addToCart } = useCart();
+    const [showNotification, setShowNotification] = useState(false);
     useEffect(() => {
         if (id) {
             fetchProductAndSizes(id);
@@ -73,7 +76,6 @@ const Page = () => {
     }
     const handleAddToCartClick = async (sizeId) => {
         await addToCart(sizeId);
-        // Optional: Additional UI feedback/logic after adding to cart
     };
     return (
         <>
@@ -138,13 +140,10 @@ const Page = () => {
                                                 if (size.amount > 0) {
                                                     setSelectedSizeId(
                                                         size.sizesStockId
-                                                    ); // Use SizesStock.id
-                                                    console.log(
-                                                        `Size selected: ${size.sizesStockId}`
                                                     );
                                                 }
                                             }}
-                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary gap-2 flex justify-center items-center hover:bg-opacity-70 focus:outline focus:outline-2 focus:outline-clrwhite 
+                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary gap-2 flex justify-center items-center hover:bg-opacity-70 focus:outline focus:outline-2 focus:outline-clrwhite active:outline active:outline-2 active:outline-clrwhite 
                         ${
                             size.amount === 0
                                 ? "opacity-50 cursor-not-allowed"
@@ -176,6 +175,10 @@ const Page = () => {
                                     alert("Please select a size.");
                                 } else {
                                     handleAddToCartClick(selectedSizeId);
+                                    setShowNotification(true);
+                                    setTimeout(() => {
+                                        setShowNotification(false);
+                                    }, 2000);
                                 }
                             }}
                             className="mt-auto w-fit bg-clrprimary px-12 py-4 font-extrabold text-xl rounded-full hover:bg-clrwhite hover:text-clrdark"
@@ -186,6 +189,25 @@ const Page = () => {
                 </div>
             </section>
             <MoreProducts />
+            <Contact />
+            <AnimatePresence>
+                {showNotification && (
+                    <motion.div
+                        initial={{ opacity: 0, x: -100, skewX: 45 }}
+                        animate={{ opacity: 1, x: 0, skewX: 0, skewY: 3 }}
+                        exit={{
+                            opacity: 0,
+                            y: 100,
+                            skewY: -10,
+                            decelerate: 0.5,
+                        }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed bottom-0 left-0 mb-4 ml-4 p-3 text-xl bg-[#00A36C] z-50 font-black italic text-white"
+                    >
+                        Lagt i kassa !
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 };
