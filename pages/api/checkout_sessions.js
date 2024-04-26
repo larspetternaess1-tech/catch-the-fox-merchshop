@@ -17,7 +17,6 @@ export default async function handler(req, res) {
                 items.map((item) => ({
                     stripe_id: item.price, // Assuming `price` here actually refers to stripe_id in your model
                     quantity: item.quantity,
-                    sizeStockId: item.sizeStockId, // Ensure sizeStockId is passed from the client
                 }))
             );
 
