@@ -1,4 +1,12 @@
+"use client";
+
+import React, { useEffect } from "react";
+
 export default function SuccessPage() {
+    useEffect(() => {
+        // Clear the cart from local storage on page load
+        localStorage.removeItem("cart");
+    }, []);
     return (
         <main className="min-h-screen ">
             <div className="flex w-full flex-col items-center gap-8 py-16">
