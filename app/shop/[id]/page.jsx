@@ -140,16 +140,19 @@ const Page = () => {
                                                 if (size.amount > 0) {
                                                     setSelectedSizeId(
                                                         size.sizesStockId
+                                                    ); // Use SizesStock.id
+                                                    console.log(
+                                                        `Size selected: ${size.sizesStockId}`
                                                     );
                                                 }
                                             }}
-                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary gap-2 flex justify-center items-center hover:bg-opacity-70 focus:outline focus:outline-2 focus:outline-clrwhite  
-                        ${
-                            size.amount === 0
-                                ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-opacity-70 hover:outline hover:outline-2 hover:outline-clrwhite"
-                        }`}
-                                            // Disable button if amount is 0
+                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary flex justify-center items-center gap-2 
+                                                        ${
+                                                            size.amount === 0
+                                                                ? "opacity-50 cursor-none"
+                                                                : "active:bg-opacity-60 focus:outline focus:outline-2 focus:outline-clrwhite"
+                                                        }
+                                                        transition duration-150 ease-in-out`}
                                             disabled={size.amount === 0}
                                         >
                                             <span className="font-bold">
@@ -202,7 +205,7 @@ const Page = () => {
                             decelerate: 0.5,
                         }}
                         transition={{ duration: 0.3 }}
-                        className="fixed bottom-0 left-0 mb-4 ml-4 p-3 text-xl bg-[#00A36C] z-50 font-black italic text-white"
+                        className="fixed bottom-0 left-0 mb-4 ml-4  p-3 pr-6 text-3xl bg-[#00A36C] z-50 font-black italic text-white"
                     >
                         Lagt i kassa !
                     </motion.div>
