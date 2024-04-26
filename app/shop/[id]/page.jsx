@@ -143,11 +143,11 @@ const Page = () => {
                                                     );
                                                 }
                                             }}
-                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary gap-2 flex justify-center items-center hover:bg-opacity-70 focus:outline focus:outline-2 focus:outline-clrwhite active:outline active:outline-2 active:outline-clrwhite 
+                                            className={`bg-opacity-80 w-44 py-3 bg-clrprimary gap-2 flex justify-center items-center hover:bg-opacity-70 focus:outline focus:outline-2 focus:outline-clrwhite  
                         ${
                             size.amount === 0
                                 ? "opacity-50 cursor-not-allowed"
-                                : "hover:bg-opacity-70"
+                                : "hover:bg-opacity-70 hover:outline hover:outline-2 hover:outline-clrwhite"
                         }`}
                                             // Disable button if amount is 0
                                             disabled={size.amount === 0}
