@@ -136,6 +136,7 @@ const Page = () => {
                                 {sizes.map((size, index) => (
                                     <li key={index}>
                                         <button
+                                            tabindex="0"
                                             onClick={() => {
                                                 if (size.amount > 0) {
                                                     setSelectedSizeId(
