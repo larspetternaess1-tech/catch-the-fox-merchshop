@@ -18,6 +18,7 @@ function page() {
                 </p>
             </div>
             <ShopGrid />
+            <Contact />
         </main>
     );
 }

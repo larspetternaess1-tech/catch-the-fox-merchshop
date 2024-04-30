@@ -143,7 +143,7 @@ const CartComponent = () => {
 
         if (adjustmentsNeeded) {
             setErrorMessage(
-                "Some items in your cart are no longer available in the selected quantity. Please review your cart before proceeding. | Noen varer i handlekurven er ikke lenger tilgjengelige i valgt antall. Vennligst gjennomgå handlekurven din før du fortsetter."
+                "Produktene som er fjernet er desverre kjøpt opp av andre kunder. Vi har oppdatert handlekurven din så du kan fortsette til kjøp med tilgjengelige varer. | The products that have been removed have unfortunately been bought by other customers. We have updated your cart so you can continue to purchase with available items."
             );
             return; // Halt the checkout process
         }
