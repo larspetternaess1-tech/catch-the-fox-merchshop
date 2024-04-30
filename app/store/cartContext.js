@@ -1,5 +1,5 @@
 "use client";
-import supabase from "/pages/api/supabaseClient";
+import { supabase } from "/pages/api/supabaseClient";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
