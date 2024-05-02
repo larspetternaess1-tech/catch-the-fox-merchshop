@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { supabase } from "/pages/api/supabaseClient"; // Adjust the import path as needed
 import { useCart } from "../../store/cartContext"; // Adjust the import path as needed
 import { loadStripe } from "@stripe/stripe-js";
 import Link from "next/link";
@@ -12,13 +11,7 @@ const stripePromise = loadStripe(
 );
 
 const CartComponent = () => {
-    const {
-        cart,
-        addToCart,
-        decreaseQuantity,
-        removeFromCart,
-        updateCartQuantity,
-    } = useCart();
+    const { cart, addToCart, decreaseQuantity, removeFromCart } = useCart();
     const [errorMessage, setErrorMessage] = useState("");
     const [cartItems, setCartItems] = useState([]);
     const handleAddToCartClick = async (sizeId) => {
