@@ -45,47 +45,30 @@ const CartComponent = () => {
 
     useEffect(() => {
         const fetchCartItems = async () => {
-            const items = await Promise.all(
-                Object.entries(cart).map(async ([sizeStockId, quantity]) => {
-                    try {
-                        const { data, error } = await supabase
-                            .from("sizesStock") // Adjusted to correct table name
-                            .select(
-                                `
-                            id, 
-                            amount,
-                            stripe_id, 
-                            product: products (id, name, price, image_url), 
-                            size: sizes (id, name)
-                        `
-                            )
-                            .eq("id", sizeStockId) // Using sizeStockId to fetch the record
-                            .single(); // Assuming sizeStockId uniquely identifies the record
-
-                        if (error) throw error;
-                        console.log("data", data);
-
-                        return {
-                            name: data.product.name,
-                            size: data.size.name,
-                            price: data.product.price,
-                            quantity,
-                            image: data.product.image_url,
-                            stripe_id: data.stripe_id,
-                            stockId: data.id,
-                        };
-                    } catch (error) {
-                        console.error(
-                            "Error fetching cart item details:",
-                            error
-                        );
-                        return null; // Skip this item on error
-                    }
-                })
-            );
-
-            // Filter out any items that failed to fetch
-            setCartItems(items.filter((item) => item !== null));
+            const ids = Object.keys(cart);
+            const response = await fetch("/api/cart/cartItems", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ ids }),
+            });
+            const itemsData = await response.json();
+            if (response.ok) {
+                const items = itemsData.map((item) => ({
+                    name: item.product.name,
+                    size: item.size.name,
+                    price: item.product.price,
+                    quantity: cart[item.id],
+                    image: item.product.image_url,
+                    stripe_id: item.stripe_id,
+                    stockId: item.id,
+                }));
+                setCartItems(items);
+            } else {
+                console.error("Error fetching cart items", itemsData.error);
+                setCartItems([]);
+            }
         };
 
         fetchCartItems();
@@ -114,70 +97,50 @@ const CartComponent = () => {
         return price.toFixed(2) / 100 + 79;
     };
     const handleCheckout = async () => {
-        let adjustmentsNeeded = false;
-
-        const validatedCartItems = await Promise.all(
-            cartItems.map(async (item) => {
-                const { data, error } = await supabase
-                    .from("sizesStock")
-                    .select("amount")
-                    .eq("id", item.stockId)
-                    .single();
-
-                if (error) {
-                    console.error("Error validating stock:", error);
-                    return null; // Continue with other items, this item will be excluded
-                }
-
-                if (item.quantity > data.amount) {
-                    // Adjust this item's quantity in the cart to the available stock
-                    updateCartQuantity(item.stockId, data.amount); // Assumed function
-                    adjustmentsNeeded = true;
-
-                    return { ...item, quantity: data.amount }; // Update quantity for checkout
-                }
-
-                return item; // No adjustment needed
-            })
-        );
-
-        if (adjustmentsNeeded) {
-            setErrorMessage(
-                "Produktene som er fjernet er desverre kjøpt opp av andre kunder. Vi har oppdatert handlekurven din så du kan fortsette til kjøp med tilgjengelige varer. | The products that have been removed have unfortunately been bought by other customers. We have updated your cart so you can continue to purchase with available items."
-            );
-            return; // Halt the checkout process
-        }
-
-        // If no adjustments are needed, or once adjustments are acknowledged, proceed with checkout
-        const stripe = await stripePromise;
-        const items = validatedCartItems
-            .filter((item) => item !== null)
-            .map((item) => ({
-                price: item.stripe_id,
-                quantity: item.quantity,
-            }));
-
-        fetch("/api/checkout_sessions", {
+        // Validate and adjust quantities through your API
+        const response = await fetch("/api/cart/validateAndAdjust", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ items }),
-        })
-            .then((response) => {
-                if (!response.ok)
-                    throw new Error("Network response was not ok");
-                return response.json();
-            })
-            .then((data) => {
-                // Redirect to Stripe Checkout
-                return stripe.redirectToCheckout({ sessionId: data.sessionId });
-            })
-            .catch((error) => {
-                console.error("Error:", error);
-                // Here you could display an error message to the user, if needed
-            });
+            body: JSON.stringify({
+                items: cartItems.map((item) => ({
+                    id: item.stockId,
+                    quantity: item.quantity,
+                })),
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            setErrorMessage(
+                "Error in validating cart items: " + errorData.error
+            );
+            return;
+        }
+
+        const validatedItems = await response.json();
+        const stripe = await stripePromise;
+        const sessionResponse = await fetch("/api/checkout_sessions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                items: validatedItems.map((item) => ({
+                    price: item.stripe_id,
+                    quantity: item.quantity,
+                })),
+            }),
+        });
+        const sessionData = await sessionResponse.json();
+        if (sessionResponse.ok) {
+            stripe.redirectToCheckout({ sessionId: sessionData.sessionId });
+        } else {
+            console.error("Checkout session failed", sessionData.error);
+        }
     };
+
     return (
         <div className="flex w-full flex-col gap-2">
             {cartItems.map((item, index) => (
