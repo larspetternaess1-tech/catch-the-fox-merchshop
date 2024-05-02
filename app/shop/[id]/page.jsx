@@ -2,119 +2,99 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { supabase } from "/pages/api/supabaseClient";
-import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 import MoreProducts from "./components/MoreProducts";
-import { useCart } from "../../store/cartContext";
 import Contact from "../../components/contact";
+import { useCart } from "../../store/cartContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Page = () => {
-    const { id } = useParams();
+    const { id } = useParams(); // Using useParams to fetch the dynamic route parameter
     const [product, setProduct] = useState(null);
     const [sizes, setSizes] = useState([]);
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [selectedSizeId, setSelectedSizeId] = useState(null);
     const { addToCart } = useCart();
     const [showNotification, setShowNotification] = useState(false);
+
     useEffect(() => {
         if (id) {
+            // Ensure id is not undefined
             fetchProductAndSizes(id);
         }
     }, [id]);
 
     const fetchProductAndSizes = async (productId) => {
-        // First, fetch the product details
-        const { data: productData, error: productError } = await supabase
-            .from("products")
-            .select("id, name, category_id, price, image_url")
-            .eq("id", productId)
-            .single();
+        const response = await fetch(`/api/products/${productId}`);
+        const data = await response.json();
 
-        if (productError || !productData) {
-            console.error("Error fetching product:", productError);
-            return;
+        if (response.ok) {
+            setProduct(data.product);
+            setSizes(
+                data.sizes.map((size) => ({
+                    sizesStockId: size.id,
+                    amount: size.amount,
+                    name: size.size.name,
+                    sizeId: size.size.id,
+                }))
+            );
+        } else {
+            console.error("Error fetching product and sizes:", data.error);
         }
-
-        // Then, fetch SizesStock entries for this product, including size details
-        const { data: sizesStockData, error: sizesStockError } = await supabase
-            .from("sizesStock")
-            .select(
-                `
-            id, amount, 
-            size: sizes!size_id (id, name)
-        `
-            )
-            .eq("product_id", productId);
-
-        if (sizesStockError || !sizesStockData) {
-            console.error("Error fetching sizes and stock:", sizesStockError);
-            return;
-        }
-
-        // Set the product state
-        setProduct(productData);
-
-        // Map SizesStock entries to include both SizesStock.id and size details
-        const sizesWithStock = sizesStockData.map((ss) => ({
-            sizesStockId: ss.id,
-            amount: ss.amount,
-            name: ss.size.name,
-            sizeId: ss.size.id,
-        }));
-
-        setSizes(sizesWithStock);
     };
 
-    const toggleDropdown = () => {
-        setIsDropdownVisible(!isDropdownVisible);
+    const toggleDropdown = () => setIsDropdownVisible(!isDropdownVisible);
+
+    const handleAddToCartClick = async (sizeId) => {
+        await addToCart(sizeId);
+        setShowNotification(true);
+        setTimeout(() => setShowNotification(false), 2000);
     };
 
     if (!product) {
         return <div>Loading...</div>;
     }
-    const handleAddToCartClick = async (sizeId) => {
-        await addToCart(sizeId);
-    };
+
     return (
         <>
             <section className="mx-auto flex max-w-7xl flex-col gap-20 px-4 py-14">
                 <div className="flex cursor-default gap-2 text-xs font-semibold italic text-clrtertiary ">
-                    <Link className="underline underline-offset-4" href="/shop">
-                        Shop
+                    <Link href="/shop">
+                        <span className="underline underline-offset-4">
+                            Shop
+                        </span>
                     </Link>
                     <span>/</span>
-                    {product?.name}
+                    {product.name}
                 </div>
                 <div className="flex w-full flex-col md:flex-row">
                     <div className="grid flex-1 place-items-center pb-8">
                         <Image
                             className="object-contain"
-                            src={product?.image_url}
-                            alt="graphic Catch the fox t-shirt"
+                            src={product.image_url}
+                            alt={product.name}
                             width={400}
                             height={450}
+                            unoptimized={true}
                         />
                     </div>
                     <div className="flex flex-1 flex-col gap-12">
                         <div>
-                            <span>T-shirt</span>
+                            <span className="text-sm font-semibold">
+                                T-shirt
+                            </span>
                             <h1 className="text-3xl font-black lg:text-5xl">
-                                {product?.name}
+                                {product.name}
                             </h1>
                         </div>
                         <p className="font-medium">
-                            Discover your inner rockstar with our Catch The Fox
-                            Limited Edition T-Shirt! Made with 100% premium
-                            cotton for ultimate comfort, this tee is a must-have
-                            for any true fan. Get yours now and keep the music
-                            alive!
+                            {`Discover your inner rockstar with our ${product.name} Limited Edition T-Shirt! Made with 100% premium cotton for ultimate comfort, this tee is a must-have for any true fan. Get yours now and keep the music alive!`}
                         </p>
                         <span className="relative z-10 text-4xl font-black italic text-clrprimary lg:text-5xl">
-                            {product?.price / 100},-
+                            {Number(product.price / 100).toFixed(2)},-
                             <span className="absolute left-[-3px] top-[-3px] z-0 text-4xl font-black italic text-clrtertiary lg:text-5xl">
-                                {product?.price / 100},-
+                                {Number(product.price / 100).toFixed(2)},-
                             </span>
                         </span>
                         <div className="flex max-w-96 flex-wrap bg-clrprimarydark">
@@ -136,12 +116,12 @@ const Page = () => {
                                 {sizes.map((size, index) => (
                                     <li key={index}>
                                         <button
-                                            tabindex="0"
+                                            tabIndex="0"
                                             onClick={() => {
                                                 if (size.amount > 0) {
                                                     setSelectedSizeId(
                                                         size.sizesStockId
-                                                    ); // Use SizesStock.id
+                                                    );
                                                     console.log(
                                                         `Size selected: ${size.sizesStockId}`
                                                     );
@@ -169,7 +149,7 @@ const Page = () => {
                         </div>
                         <span
                             id="plzPickSize"
-                            className=" font-extrabold text-clrwhite opacity-50"
+                            className="font-extrabold text-clrwhite opacity-50"
                         >
                             Pick a size to add to cart
                         </span>
@@ -179,10 +159,6 @@ const Page = () => {
                                     alert("Please select a size.");
                                 } else {
                                     handleAddToCartClick(selectedSizeId);
-                                    setShowNotification(true);
-                                    setTimeout(() => {
-                                        setShowNotification(false);
-                                    }, 2000);
                                 }
                             }}
                             className="mt-auto w-fit bg-clrprimary px-12 py-4 font-extrabold text-xl rounded-full hover:bg-clrwhite hover:text-clrdark"
@@ -206,9 +182,9 @@ const Page = () => {
                             decelerate: 0.5,
                         }}
                         transition={{ duration: 0.3 }}
-                        className="fixed bottom-0 left-0 mb-4 ml-4  p-3 pr-6 text-3xl bg-[#00A36C] z-50 font-black italic text-white"
+                        className="fixed bottom-0 left-0 mb-4 ml-4 p-3 pr-6 text-3xl bg-[#00A36C] z-50 font-black italic text-white"
                     >
-                        Lagt i kassa !
+                        Added to cart!
                     </motion.div>
                 )}
             </AnimatePresence>

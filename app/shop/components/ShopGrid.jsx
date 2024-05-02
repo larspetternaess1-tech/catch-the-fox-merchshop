@@ -1,17 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "/pages/api/supabaseClient";
 import Link from "next/link";
 import Image from "next/image";
 
 const fetchProducts = async () => {
-    const { data, error } = await supabase.from("products").select("*");
+    const response = await fetch("/api/products");
+    const data = await response.json();
 
-    if (error) {
-        console.log("Error", error);
-    } else {
+    if (response.ok) {
         return data;
+    } else {
+        console.log("Error fetching products:", data.error);
+        return [];
     }
 };
 
@@ -35,15 +36,16 @@ const ShopGrid = () => {
                         <Image
                             className="max-h-80 object-contain"
                             src={product?.image_url}
-                            alt="graphic Catch the fox t-shirt"
+                            alt={product?.name}
                             width={400}
                             height={450}
+                            unoptimized={true} // Use this if your images are hosted outside of Vercel's optimization
                         />
                         <p className="pt-2 text-xl italic md:text-2xl">
                             {product?.name}
                         </p>
                         <p className="font-semibold italic">
-                            {Number(product?.price / 100)}kr
+                            {Number(product?.price / 100).toFixed(2)}kr
                         </p>
                     </div>
                     <Link href={"/shop/" + product.id}>
