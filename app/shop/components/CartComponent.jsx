@@ -98,12 +98,12 @@ const CartComponent = () => {
             },
             body: JSON.stringify({
                 items: cartItems.map((item) => ({
-                    id: item.stockId,
+                    id: item.stripe_id,
                     quantity: item.quantity,
                 })),
             }),
         });
-
+        console.log(items);
         if (!response.ok) {
             const errorData = await response.json();
             setErrorMessage(

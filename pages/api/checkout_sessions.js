@@ -7,7 +7,6 @@ export default async function handler(req, res) {
 
             // Ensure items exist and is an array
             if (!items || !Array.isArray(items)) {
-                console.log(items);
                 return res
                     .status(400)
                     .json({ error: "Invalid request format" });
