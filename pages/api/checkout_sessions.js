@@ -21,7 +21,11 @@ export default async function handler(req, res) {
             );
 
             const session = await stripe.checkout.sessions.create({
-                line_items: items,
+                payment_method_types: ["card"],
+                line_items: items.map((item) => ({
+                    price: item.price, // Ensure this is the Stripe price ID
+                    quantity: item.quantity,
+                })),
                 mode: "payment",
                 success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${req.headers.origin}/cancel`,
@@ -31,9 +35,10 @@ export default async function handler(req, res) {
                     allowed_countries: ["NO"],
                 },
                 shipping_options: [
-                    { shipping_rate: "shr_1P06OnGTrv1TY0preYT0wO14" },
+                    { shipping_rate: "shr_1PDokZFsFXjrirmTCiYCZaFp" },
                 ],
             });
+
             res.status(200).json({ sessionId: session.id });
         } catch (err) {
             res.status(err.statusCode || 500).json(err.message);
