@@ -12,7 +12,7 @@ export default async function handler(req, res) {
                 console.dir(items);
                 const { data, error } = await supabase
                     .from("sizesStock")
-                    .select("amount")
+                    .select("amount, stripe_id") // Include stripe_id in the selection
                     .eq("id", item.id)
                     .single();
 
@@ -25,7 +25,8 @@ export default async function handler(req, res) {
                 if (item.quantity > availableQuantity) {
                     return { ...item, quantity: availableQuantity };
                 }
-                return item;
+                // Return item with stripe_id instead of id
+                return { ...item, stripe_id: data.stripe_id };
             })
         );
 
