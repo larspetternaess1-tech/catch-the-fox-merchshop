@@ -121,7 +121,7 @@ const CartComponent = () => {
             },
             body: JSON.stringify({
                 items: validatedItems.map((item) => ({
-                    price: item.stripe_id,
+                    price: item.stripe_id, // Ensure this field correctly maps to Stripe price IDs
                     quantity: item.quantity,
                 })),
             }),
