@@ -6,6 +6,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default async function handler(req, res) {
     const items = req.body.items;
+    console.dir(items);
     const results = await Promise.all(
         items.map(async (item) => {
             const { data, error } = await supabase
