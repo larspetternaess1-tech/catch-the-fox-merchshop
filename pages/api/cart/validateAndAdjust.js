@@ -9,10 +9,9 @@ export default async function handler(req, res) {
         const items = req.body.items;
         const results = await Promise.all(
             items.map(async (item) => {
-                console.dir(items);
                 const { data, error } = await supabase
                     .from("sizesStock")
-                    .select("amount, stripe_id") // Include stripe_id in the selection
+                    .select("amount, stripe_id")
                     .eq("id", item.id)
                     .single();
 
@@ -26,7 +25,7 @@ export default async function handler(req, res) {
                     return { ...item, quantity: availableQuantity };
                 }
                 // Return item with stripe_id instead of id
-                return { ...item, stripe_id: data.stripe_id };
+                return { price: data.stripe_id, quantity: item.quantity };
             })
         );
 
