@@ -9,6 +9,7 @@ export default async function handler(req, res) {
         const items = req.body.items;
         const results = await Promise.all(
             items.map(async (item) => {
+                console.dir(items);
                 const { data, error } = await supabase
                     .from("sizesStock")
                     .select("amount")
