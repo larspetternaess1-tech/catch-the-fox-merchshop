@@ -19,7 +19,7 @@ export default async function handler(req, res) {
                     quantity: item.quantity,
                 }))
             );
-
+            console.dir(cartMetadata);
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ["card"],
                 line_items: items.map((item) => ({
