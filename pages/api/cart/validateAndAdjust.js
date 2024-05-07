@@ -12,7 +12,7 @@ export default async function handler(req, res) {
                 const { data, error } = await supabase
                     .from("sizesStock")
                     .select("amount")
-                    .eq("stripe_id", item.stripe_id)
+                    .eq("stripe_id", item.id)
                     .single();
 
                 if (error) {
