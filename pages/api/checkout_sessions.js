@@ -34,9 +34,6 @@ export default async function handler(req, res) {
                 shipping_address_collection: {
                     allowed_countries: ["NO"],
                 },
-                shipping_options: [
-                    { shipping_rate: "shr_1PDokZFsFXjrirmTCiYCZaFp" },
-                ],
             });
 
             // Successfully created session
