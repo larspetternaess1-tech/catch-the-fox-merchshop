@@ -31,7 +31,6 @@ export default async function handler(req, res) {
                 success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${req.headers.origin}/cancel`,
                 metadata: { cart: JSON.stringify(items) },
-                automatic_tax: { enabled: true },
                 shipping_address_collection: {
                     allowed_countries: ["NO"],
                 },
