@@ -1,35 +1,36 @@
-export const stripe = require("stripe")(process.env.STRIPE_SECRET);
+const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
 export default async function handler(req, res) {
     if (req.method === "POST") {
         try {
-            const { items } = req.body; // Expecting items to be an array of { price, quantity }
+            const { items } = req.body;
 
-            // Ensure items exist and is an array
+            // Validate the items array
             if (!items || !Array.isArray(items)) {
-                return res
-                    .status(400)
-                    .json({ error: "Invalid request format" });
+                console.error("Invalid request: items must be an array");
+                return res.status(400).json({
+                    error: "Invalid request format: items must be an array",
+                });
             }
 
-            // Serialize the cart items to store in metadata
-            const cartMetadata = JSON.stringify(
-                items.map((item) => ({
-                    price: item.price, // Assuming `price` here actually refers to stripe_id in your model
-                    quantity: item.quantity,
-                }))
-            );
-            console.dir(cartMetadata);
+            // Log the items to check if they are correctly formatted
+            console.dir("Received items:", items);
+
+            const line_items = items.map((item) => ({
+                price: item.price,
+                quantity: item.quantity,
+            }));
+
+            // Log the line items to ensure they are correct before sending to Stripe
+            console.dir("Prepared line_items for Stripe:", line_items);
+
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ["card"],
-                line_items: items.map((item) => ({
-                    price: item.price, // Ensure this is the Stripe price ID
-                    quantity: item.quantity,
-                })),
+                line_items: line_items,
                 mode: "payment",
                 success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${req.headers.origin}/cancel`,
-                metadata: { cart: cartMetadata }, // Attach serialized cart data
+                metadata: { cart: JSON.stringify(items) },
                 automatic_tax: { enabled: true },
                 shipping_address_collection: {
                     allowed_countries: ["NO"],
@@ -39,9 +40,12 @@ export default async function handler(req, res) {
                 ],
             });
 
+            // Successfully created session
+            console.log("Checkout session created successfully:", session.id);
             res.status(200).json({ sessionId: session.id });
         } catch (err) {
-            res.status(err.statusCode || 500).json(err.message);
+            console.error("Error creating Stripe checkout session:", err);
+            res.status(err.statusCode || 500).json({ error: err.message });
         }
     } else {
         res.setHeader("Allow", "POST");
