@@ -15,7 +15,7 @@ export default async function handler(req, res) {
             // Serialize the cart items to store in metadata
             const cartMetadata = JSON.stringify(
                 items.map((item) => ({
-                    stripe_id: item.price, // Assuming `price` here actually refers to stripe_id in your model
+                    price: item.price, // Assuming `price` here actually refers to stripe_id in your model
                     quantity: item.quantity,
                 }))
             );
