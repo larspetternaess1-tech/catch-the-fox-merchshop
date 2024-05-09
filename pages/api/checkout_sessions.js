@@ -30,10 +30,21 @@ export default async function handler(req, res) {
                 mode: "payment",
                 success_url: `${req.headers.origin}/success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${req.headers.origin}/cancel`,
-                metadata: { cart: JSON.stringify(items) },
+                metadata: {
+                    cart: JSON.stringify(
+                        items.map((item) => ({
+                            price_id: item.stripe_id, // Stripe price ID
+                            quantity: item.quantity,
+                            stockId: item.stockId, // Stock ID from your cart component
+                        }))
+                    ),
+                },
                 shipping_address_collection: {
                     allowed_countries: ["NO"],
                 },
+                shipping_options: [
+                    { shipping_rate: "shr_1P06OnGTrv1TY0preYT0wO14" },
+                ],
             });
 
             // Successfully created session

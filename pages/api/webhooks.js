@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import Stripe from "stripe";
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET);
+const stripe = new Stripe(process.env.STRIPE_SECRET);
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -12,100 +13,111 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-    if (req.method === "POST") {
-        const buf = await readRawBody(req);
-        const sig = req.headers["stripe-signature"];
+    if (req.method !== "POST") {
+        res.setHeader("Allow", ["POST"]);
+        return res.status(405).end("Method Not Allowed");
+    }
 
-        let event;
+    const buf = await readRawBody(req);
+    const sig = req.headers["stripe-signature"];
 
-        try {
-            event = stripe.webhooks.constructEvent(
-                buf,
-                sig,
-                process.env.STRIPE_WEBHOOK_SECRET
-            );
-        } catch (err) {
-            console.error(`Error verifying webhook signature: ${err.message}`);
-            return res.status(400).send(`Webhook Error: ${err.message}`);
-        }
+    try {
+        const event = stripe.webhooks.constructEvent(
+            buf,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        );
+
+        console.dir({ message: "Webhook event received:", event: event.type });
 
         if (event.type === "checkout.session.completed") {
-            console.log("Payment was successful!");
+            console.dir({
+                message: "Handling checkout.session.completed event",
+            });
 
             // Retrieve the session to get the metadata
             const session = await stripe.checkout.sessions.retrieve(
                 event.data.object.id
             );
+
             const items = JSON.parse(session.metadata.cart);
 
-            // Aggregate quantities for each unique stripe_id
-            const aggregatedItems = items.reduce((acc, item) => {
-                acc[item.stripe_id] =
-                    (acc[item.stripe_id] || 0) + item.quantity;
-                return acc;
-            }, {});
-
-            // Update inventory in Supabase for each unique item
-            for (const [stripeId, quantity] of Object.entries(
-                aggregatedItems
-            )) {
-                await updateInventory(stripeId, quantity);
+            // Update inventory in Supabase for each unique item using stockId
+            for (const item of items) {
+                await updateInventory(item.stockId, item.quantity);
             }
         }
 
         res.json({ received: true });
-    } else {
-        res.setHeader("Allow", ["POST"]);
-        res.status(405).end("Method Not Allowed");
+    } catch (err) {
+        console.dir({ message: "Webhook Error:", error: err.message });
+        return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 }
 
-async function updateInventory(stripeId, quantity) {
+async function updateInventory(stockId, quantity) {
     try {
-        // Retrieve the current stock level from the database
+        console.dir({
+            message: "Fetching current stock level",
+            stockId: stockId,
+        });
+
         let { data: stockData, error: stockError } = await supabase
             .from("sizesStock")
             .select("amount")
-            .eq("stripe_id", stripeId)
+            .eq("id", stockId)
             .single();
 
         if (stockError) {
+            console.dir({
+                message: "Error fetching stock data",
+                error: stockError.message,
+            });
             throw stockError;
         }
 
         if (stockData) {
             const newAmount = stockData.amount - quantity;
 
-            // Check for negative inventory
+            console.dir({
+                message: "Calculating new stock amount",
+                newAmount: newAmount,
+            });
+
             if (newAmount < 0) {
-                console.error(
-                    "Attempted to reduce inventory below zero for item ID:",
-                    stripeId
-                );
+                console.dir({
+                    message: "Attempted to reduce inventory below zero",
+                    stockId: stockId,
+                });
                 return;
             }
 
-            // Update the stock level in the database
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from("sizesStock")
                 .update({ amount: newAmount })
-                .eq("stripe_id", stripeId);
+                .eq("id", stockId);
 
             if (error) {
+                console.dir({
+                    message: "Error updating inventory",
+                    error: error.message,
+                });
                 throw error;
             }
 
-            console.log(
-                "Inventory updated for item ID:",
-                stripeId,
-                "; New amount:",
-                newAmount
-            );
+            console.dir({
+                message: "Inventory updated successfully",
+                stockId: stockId,
+                newAmount: newAmount,
+            });
         } else {
-            console.error("No stock data found for item ID:", stripeId);
+            console.dir({ message: "No stock data found", stockId: stockId });
         }
     } catch (error) {
-        console.error("Error updating inventory:", error);
+        console.dir({
+            message: "Error handling inventory update",
+            error: error.message,
+        });
     }
 }
 
@@ -119,6 +131,10 @@ async function readRawBody(request) {
             resolve(totalBuffer);
         });
         request.on("error", (err) => {
+            console.dir({
+                message: "Error reading request body",
+                error: err.message,
+            });
             reject(err);
         });
     });
