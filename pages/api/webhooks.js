@@ -35,17 +35,30 @@ export default async function handler(req, res) {
                 message: "Handling checkout.session.completed event",
             });
 
-            // Retrieve the session to get the metadata
+            // Retrieve the session including detailed line items
             const session = await stripe.checkout.sessions.retrieve(
-                event.data.object.id
+                event.data.object.id,
+                { expand: ["line_items"] }
             );
 
-            const items = JSON.parse(session.metadata.cart);
+            // Iterate over each line item in the session
+            const promises = session.line_items.data.map(async (lineItem) => {
+                const variant = lineItem.description; // Assuming the description directly contains the variant code
+                const quantity = lineItem.quantity;
 
-            // Update inventory in Supabase for each unique item using stockId
-            for (const item of items) {
-                await updateInventory(item.stockId, item.quantity);
-            }
+                console.dir({
+                    message: "Updating inventory",
+                    variant,
+                    quantity,
+                });
+
+                await updateInventory(variant, quantity);
+            });
+
+            // Wait for all inventory updates to complete
+            await Promise.all(promises);
+
+            console.dir({ message: "All inventory updates completed" });
         }
 
         res.json({ received: true });
@@ -55,67 +68,59 @@ export default async function handler(req, res) {
     }
 }
 
-async function updateInventory(stockId, quantity) {
+async function updateInventory(variant, quantity) {
     try {
-        console.dir({
-            message: "Fetching current stock level",
-            stockId: stockId,
-        });
-
-        let { data: stockData, error: stockError } = await supabase
+        let { data: stockData, error } = await supabase
             .from("sizesStock")
             .select("amount")
-            .eq("id", stockId)
+            .eq("variant", variant)
             .single();
 
-        if (stockError) {
+        if (error) {
             console.dir({
                 message: "Error fetching stock data",
-                error: stockError.message,
+                variant,
+                error: error.message,
             });
-            throw stockError;
+            throw error;
         }
 
         if (stockData) {
             const newAmount = stockData.amount - quantity;
 
-            console.dir({
-                message: "Calculating new stock amount",
-                newAmount: newAmount,
-            });
-
             if (newAmount < 0) {
                 console.dir({
-                    message: "Attempted to reduce inventory below zero",
-                    stockId: stockId,
+                    message: "Inventory cannot go negative",
+                    variant,
+                    newAmount,
                 });
-                return;
+                return; // Optionally handle this scenario
             }
 
-            const { error } = await supabase
+            const { error: updateError } = await supabase
                 .from("sizesStock")
                 .update({ amount: newAmount })
-                .eq("id", stockId);
+                .eq("variant", variant);
 
-            if (error) {
+            if (updateError) {
                 console.dir({
                     message: "Error updating inventory",
-                    error: error.message,
+                    variant,
+                    error: updateError.message,
                 });
-                throw error;
+                throw updateError;
             }
 
             console.dir({
-                message: "Inventory updated successfully",
-                stockId: stockId,
-                newAmount: newAmount,
+                message: "Inventory successfully updated",
+                variant,
+                newAmount,
             });
-        } else {
-            console.dir({ message: "No stock data found", stockId: stockId });
         }
     } catch (error) {
         console.dir({
             message: "Error handling inventory update",
+            variant,
             error: error.message,
         });
     }
