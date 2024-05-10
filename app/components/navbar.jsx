@@ -8,10 +8,10 @@ export default function Navbar({}) {
             <nav className="mx-auto flex max-w-7xl justify-between px-4 py-2 text-sm font-black italic lg:text-lg ">
                 <div className="flex gap-6">
                     <Link className="hover:not-italic" href="/">
-                        HOME
+                        HJEM
                     </Link>
                     <Link className="hover:not-italic" href="/#aboutus">
-                        ABOUT US
+                        OM OSS
                     </Link>
                     <Link className="hover:not-italic" href="/shop">
                         MERCH SHOP

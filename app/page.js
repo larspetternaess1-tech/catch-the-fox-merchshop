@@ -93,50 +93,34 @@ export default function Home() {
                     id="aboutus"
                     className="mx-auto flex max-w-7xl flex-col gap-8 bg-clrprimary px-4 py-16 md:gap-16"
                 >
-                    <h2 className="w-fit skew-y-[2deg] bg-clrdark bg-opacity-20 px-8 py-2 text-4xl font-black text-clrtertiary md:text-5xl ">
-                        ABOUT US
+                    <h2 className="w-fit skew-y-[2deg] bg-clrdark bg-opacity-20 px-8 py-2 text-4xl font-black text-clrwhite md:text-5xl ">
+                        OM OSS
                     </h2>
 
                     <div className="flex max-w-3xl flex-col gap-4 font-medium text-clrdark lg:text-xl">
-                        <p className="font-bold text-clrwhite">
-                            Introducing Catch the Fox, the sensational rock band
-                            from Northern Norway. Born in 2022, this dynamic
-                            group of four musicians is ready to rock your world.
+                        <p className="font-bold text-clrtertiary">
+                            La oss introdusere Catch the Fox, det nye
+                            Rockebandet fra Nord-Norge med stor R. Fra
+                            oppstarten i 2022 har bandet hatt en rask og
+                            spennende utvikling. Allerede har vi spilt mange
+                            konserter rundt om i Oslo og litt i Bodø.
                         </p>
                         <p>
-                            With Tommy Jee as the lead vocalist, LP Næss on
-                            guitar, Lars Olai With us on bass and guitar, and
-                            Niklas Faanes on drums, Catch the Fox brings
-                            together a diverse range of musical talents. Their
-                            sound is a captivating fusion of styles that will
-                            leave you wanting more.
+                            I 2023 ble de vinnere av den norske finalen i
+                            Emergenza-festivalen og reiste ned til Taubertal
+                            Festival for å representere Norge i den store
+                            internasjonale finalen i Tyskland. Helga etter satte
+                            de publikumsrekord på skogenscena under
+                            Parkenfestivalen.
                         </p>
                         <p>
-                            From their explosive debut performance at Oslo
-                            Cathedral School to their string of successes, Catch
-                            the Fox has been making waves in the music scene.
-                            Their energetic debut single, &#34;Dancing On The
-                            Edge&#34;, is a testament to their collective
-                            creativity and passion.
-                        </p>
-                        <p>
-                            Recently crowned winners of the Norwegian final of
-                            the Emergenza festival, Catch the Fox is set to
-                            represent Norway in the grand international final in
-                            Germany. This ambitious band has its sights set on
-                            reaching new heights and making a mark on the global
-                            stage.
-                        </p>
-                        <p>
-                            With their infectious energy, unwavering passion,
-                            and unique sound, Catch the Fox is a standout act in
-                            the Norwegian music scene. Keep an eye out for their
-                            electrifying performances and join them on their
-                            extraordinary journey.
-                        </p>
-                        <p className="font-bold text-clrwhite">
-                            Catch the Fox – the rock band that will ignite your
-                            soul and leave you craving more.
+                            Nå har de kommet seg til årets Norgesfinale i
+                            Emergenza som holdes på
+                            <span className="font-bold italic">
+                                {" "}
+                                Rockefeller i Oslo 18. mai.{" "}
+                            </span>
+                            Klarer de å vinne igjen?
                         </p>
                     </div>
                     <ArtistContainer />
