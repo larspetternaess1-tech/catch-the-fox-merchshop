@@ -89,7 +89,7 @@ const ArtistContainer = () => {
                     rolle="Guitar Hero"
                 />
                 <ArtistCard
-                    imageUrl="/iverbass.jpg"
+                    imageUrl="/iverBASS.jpg"
                     altText="artist-bilde | Iver Seljeseth!"
                     artistName="IVER SELJESETH"
                     instagram="iverseljeseth"
