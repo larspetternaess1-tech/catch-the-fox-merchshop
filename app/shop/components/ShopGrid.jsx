@@ -50,7 +50,7 @@ const ShopGrid = () => {
                     </div>
                     <Link href={"/shop/" + product.id}>
                         <button className="mt-auto rounded-full w-fit bg-clrdark px-8 py-4 font-extrabold hover:bg-clrwhite hover:text-clrdark">
-                            MORE
+                            SE MER
                         </button>
                     </Link>
                 </div>

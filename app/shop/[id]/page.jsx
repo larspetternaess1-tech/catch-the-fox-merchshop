@@ -105,7 +105,7 @@ const Page = () => {
                                 aria-expanded={isDropdownVisible}
                                 onClick={toggleDropdown}
                             >
-                                Choose size
+                                Velg størrelse
                             </button>
                             <ul
                                 className={`${
@@ -140,7 +140,7 @@ const Page = () => {
                                                 {size.name}
                                             </span>
                                             <span className="text-xs">
-                                                ( {size.amount} left )
+                                                ( {size.amount} igjen )
                                             </span>
                                         </button>
                                     </li>
@@ -151,7 +151,7 @@ const Page = () => {
                             id="plzPickSize"
                             className="font-extrabold text-clrwhite opacity-50"
                         >
-                            Pick a size to add to cart
+                            Velg en størrelse for å legge til i handlekurven
                         </span>
                         <button
                             onClick={() => {
@@ -163,7 +163,7 @@ const Page = () => {
                             }}
                             className="mt-auto w-fit bg-clrprimary px-12 py-4 font-extrabold text-xl rounded-full hover:bg-clrwhite hover:text-clrdark"
                         >
-                            Add to cart
+                            Legg til handlekurv
                         </button>
                     </div>
                 </div>
@@ -184,7 +184,7 @@ const Page = () => {
                         transition={{ duration: 0.3 }}
                         className="fixed bottom-0 left-0 mb-4 ml-4 p-3 pr-6 text-3xl bg-[#00A36C] z-50 font-black italic text-white"
                     >
-                        Added to cart!
+                        Lagt i kurven!
                     </motion.div>
                 )}
             </AnimatePresence>

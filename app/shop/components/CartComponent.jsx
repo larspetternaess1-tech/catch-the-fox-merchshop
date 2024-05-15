@@ -155,7 +155,7 @@ const CartComponent = () => {
                                 {item.name}
                             </span>
                             <div className="flex gap-2 text-sm font-bold italic">
-                                <span>Size:</span>
+                                <span>Størrelse:</span>
                                 <span>{item.size}</span>
                             </div>
                             <span className="text-sm font-bold italic">
