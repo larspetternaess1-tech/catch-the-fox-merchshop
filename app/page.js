@@ -22,7 +22,7 @@ export default function Home() {
                 </div>
                 <div className="fixed bottom-[-20px] right-0 z-50 w-full max-w-[800px] bg-clrprimary px-2 pt-2 lg:pb-2">
                     <iframe
-                        src="https://open.spotify.com/embed/track/7hcpf4fgMXaUKoSzgnJzfL?utm_source=generator&theme=0"
+                        src="https://open.spotify.com/embed/track/7cKZpIa6A2ESXTuGyOHhil?utm_source=generator&theme=0"
                         width="100%"
                         height="100"
                         allowFullScreen={false}
@@ -48,7 +48,7 @@ export default function Home() {
                         er lageret tomt.
                     </p>
                     <span className="font-black opacity-60">
-                        Forrige batch gikk på en dag!
+                        Første batch gikk på en dag!
                     </span>
                     <Link
                         href="/shop"
@@ -99,28 +99,26 @@ export default function Home() {
 
                     <div className="flex max-w-3xl flex-col gap-4 font-medium text-clrdark lg:text-xl">
                         <p className="font-bold text-clrtertiary">
-                            La oss introdusere Catch the Fox, det nye
-                            Rockebandet fra Nord-Norge med stor R. Fra
-                            oppstarten i 2022 har bandet hatt en rask og
-                            spennende utvikling. Allerede har vi spilt mange
-                            konserter rundt om i Oslo og litt i Bodø.
+                            Catch the Fox er det nye rockebandet fra fra Nord
+                            Norge. Siden oppstarten i 2022 har bandet har hatt
+                            en rask og spennende utvikling, og allerede spilt
+                            mange konserter rundt om i Oslo og Bodø.
                         </p>
                         <p>
-                            I 2023 ble de vinnere av den norske finalen i
-                            Emergenza-festivalen og reiste ned til Taubertal
-                            Festival for å representere Norge i den store
-                            internasjonale finalen i Tyskland. Helga etter satte
-                            de publikumsrekord på skogenscena under
+                            I 2023 ble Catch the Fox vinnere av den norske
+                            finalen i Emergenza-festivalen og representerte
+                            Norge i den store internasjonale finalen på
+                            Taubertal Festival i Tyskland. Helgen etter satte de
+                            publikumsrekord på skogenscena under
                             Parkenfestivalen.
                         </p>
                         <p>
-                            Nå har de kommet seg til årets Norgesfinale i
-                            Emergenza som holdes på
-                            <span className="font-bold italic">
-                                {" "}
-                                Rockefeller i Oslo 18. mai.{" "}
-                            </span>
-                            Klarer de å vinne igjen?
+                            Nylig deltok de igjen i Norgesfinalen i Emergenza,
+                            som ble holdt på Rockefeller i Oslo 18. mai, og de
+                            sikret en imponerende 3. plass. Nå ser bandet frem
+                            til å spille inn mer musikk i sommer, og vi er
+                            stolte av å presentere deres helt nye singel
+                            «Hallways».
                         </p>
                     </div>
                     <ArtistContainer />
